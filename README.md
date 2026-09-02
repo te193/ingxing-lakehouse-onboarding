@@ -136,48 +136,6 @@ references/project-standards/
 
 不要把真实 APP Secret、AccessKey、Token 或数据库密码写进生成代码或提交到 GitHub。
 
-## OSS MCP：连接 OSS 做只读审查
-
-可选安装阿里云官方 [alibabacloud-oss-mcp-server](https://github.com/aliyun/alibabacloud-oss-mcp-server)，用于让 Codex 检查 OSS Bucket 元数据和当前版本支持的对象能力。
-
-官方版本要求 Node.js `>= 18.20.5`，可在独立目录安装：
-
-```bash
-npm install alibabacloud-oss-mcp-server@alpha
-```
-
-stdio 模式的 MCP 配置示意：
-
-```toml
-[mcp_servers.aliyun-oss]
-command = "node"
-args = ["<绝对路径>/node_modules/alibabacloud-oss-mcp-server/dist/index.js"]
-```
-
-Codex 的 MCP 配置通常放在使用者自己的 `~/.codex/config.toml`；Windows 对应
-`C:\Users\<用户名>\.codex\config.toml`。环境变量应配置在使用者本机、凭据管理器或
-企业密钥服务中，不要把真实值直接写进这个公开仓库。修改配置后重新启动 Codex，再让
-Codex 先列出 OSS MCP 当前公开的工具，确认连接和权限范围。
-
-每位使用者必须配置自己的阿里云身份，不要复制他人的密钥：
-
-| 环境变量 | 用途 |
-|---|---|
-| `OSS_ACCESS_KEY_ID` | 使用者自己的 AccessKey ID |
-| `OSS_ACCESS_KEY_SECRET` | 使用者自己的 AccessKey Secret |
-| `OSS_SECURITY_TOKEN` | 使用临时 STS 身份时填写 |
-| `OSS_REGION` | 例如 `oss-cn-shenzhen` |
-| `OSS_ENDPOINT` | 可选的 OSS 访问域名 |
-
-安全要求：
-
-- 优先使用 RAM 子账号或 STS 临时凭据；
-- 只授予目标 Bucket 所需的只读权限；
-- 不要使用主账号 AccessKey；
-- 不要把凭据写进仓库、README、SQL、Python或聊天内容；
-- 本地电脑通常不能访问 OSS 内网 Endpoint，应使用可达的外网 Endpoint；只有运行环境位于对应阿里云 VPC 时才使用内网地址；
-- MCP 能审查到的范围取决于安装版本公开的工具。先列出工具能力，再决定能否读取对象正文，不能把“能查看 Bucket 信息”当成“已经核对文件内容”。
-
 ## MaxCompute MCP：检查表结构和只读数据
 
 如果需要让 Codex 直接核对 MaxCompute 表结构、分区、SQL 或只读数据，应配置团队使用的 `maxcompute-mcp`。
@@ -204,6 +162,23 @@ Codex 先列出 OSS MCP 当前公开的工具，确认连接和权限范围。
 数据库账号必须限制为只读，至少禁止 `INSERT`、`UPDATE`、`DELETE`、`ALTER`、`DROP` 和存储过程调用。不要在 README、Skill、脚本或 Git 仓库中保存连接值。
 
 如果没有数据库权限，Skill 仍可使用官方接口文档和已有成功代码，但会把无法验证的历史字段标记为缺失或推断，不会假装已确认。
+
+## 安装后的一次性验收
+
+安装 Skill 并配置账号后，执行一次：
+
+```text
+使用 $lingxing-lakehouse-onboarding 执行安装验收。
+```
+
+Codex 会使用只读操作探测：
+
+1. `maxcompute-mcp` 是否已经配置，并且能访问使用者获准访问的 MaxCompute 项目或表元数据；
+2. `opt-lyt-db` 是否已经安装，并且能使用使用者自己的只读数据库账号完成连接检查。
+
+如果远端访问成功，说明现有配置可直接使用，不要重新配置。失败时只报告“未安装”“连接失败”或“权限不足”及对应配置方向，不读取、不显示、不保存账号、密码、AccessKey、Token 或 Cookie。
+
+该验收只在安装后或用户明确要求重新检查时执行。正常接入领星接口时不会重复检测，也不会把检测结果或凭据提交到 GitHub。
 
 ## 领星接口和凭据
 

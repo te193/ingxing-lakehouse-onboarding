@@ -20,6 +20,10 @@ If the expected workspace is unavailable, say which sources are missing and use 
 
 `project_config.py` and `lx_sync_engine.py` are DataWorks online shared resources. Their absence from the local workspace is expected and is not a blocker. Generate resource declarations and reuse confirmed public calls without asking the user to provide these files solely for local inspection.
 
+## One-Time Installation Check
+
+Only when the user explicitly asks for an installation check, read and follow [references/installation-check.md](references/installation-check.md). Probe the user's existing `maxcompute-mcp` and `opt-lyt-db` connections with bounded read-only operations. A successful probe means no reconfiguration is needed. Do not perform this check during normal interface onboarding, and never inspect, print, copy, or store credential values.
+
 ## Workflow
 
 1. Resolve the name through the migration ledger. Detect aliases and duplicate matches.
