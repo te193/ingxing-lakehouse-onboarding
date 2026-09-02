@@ -2,11 +2,7 @@
 
 ## Workspace sources
 
-Expected workspace root:
-
-```text
-E:\Code\Python_code\湖仓一体数据迁移
-```
+Discover the active workspace root from the current Codex workspace or ask for it when no workspace is open. Never assume the original author's Windows username, drive letter, or absolute path.
 
 Read these current files before deciding an interface design:
 
@@ -14,7 +10,9 @@ Read these current files before deciding an interface design:
 2. `领星接口ODS_DWD迁移台账.md` — interface identity, legacy request strategy, target tables, and migration status.
 3. `MySQL到OSS到MaxCompute_DataWorks配置操作手册.md` — DataWorks execution sequence and operator instructions.
 
-Read only relevant local Python/SQL samples after identifying the interface. If an expected file is missing, report it and do not treat remembered content as current.
+Use the workspace copies when present because they may be newer than the packaged skill. If a workspace copy is missing, use the bundled baseline under `references/project-standards/` and disclose that fallback. If neither source exists, report the missing source and do not treat remembered content as current.
+
+Read only relevant local Python/SQL samples after identifying the interface.
 
 ## Evidence priority by question
 
