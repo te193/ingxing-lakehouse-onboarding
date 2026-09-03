@@ -3,7 +3,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SKILL = (ROOT / "SKILL.md").read_text(encoding="utf-8")
+README = (ROOT / "README.md").read_text(encoding="utf-8")
 INSTALL_CHECK = ROOT / "references" / "installation-check.md"
+EXAMPLES = ROOT / "references" / "code-examples"
 
 
 def require(condition: bool, message: str) -> None:
@@ -20,5 +22,18 @@ for name in ("maxcompute-mcp", "opt-lyt-db"):
 
 require("Normal interface onboarding must not repeat" in install_text, "normal runs are not exempted")
 require("user's own least-privilege, read-only account or key" in install_text, "own read-only credentials are not required")
+
+require(EXAMPLES.joinpath("README.md").exists(), "missing bundled code-example index")
+require("references/code-examples/README.md" in SKILL, "SKILL.md does not route bundled examples")
+require("内置参考代码" in README, "README does not explain bundled examples")
+
+for scenario in ("simple-shared-json", "manual-post-json", "sid-batch-parent-child"):
+    folder = EXAMPLES / scenario
+    require(folder.is_dir(), f"missing example scenario: {scenario}")
+    names = [path.name for path in folder.iterdir() if path.is_file()]
+    require(any(name.endswith(".py") for name in names), f"{scenario} has no PyODPS example")
+    require(any(name.startswith("ext_") and name.endswith("_ddl.sql") for name in names), f"{scenario} has no EXT DDL")
+    require(any(name.startswith("dwd_") and name.endswith("_ddl.sql") for name in names), f"{scenario} has no DWD DDL")
+    require(any(name.startswith("dwd_") and name.endswith("_etl.sql") for name in names), f"{scenario} has no DWD ETL")
 
 print("package behavior checks passed")

@@ -91,6 +91,21 @@ references/project-standards/
 
 如果团队规范有更新，应先更新业务项目中的文档，再同步更新本仓库中的基线副本。
 
+## 内置参考代码
+
+仓库同时提供三类已经形成完整链路的代码快照：
+
+```text
+references/code-examples/
+├─ simple-shared-json/       # 公共sync_task、POST body、JSON
+├─ manual-post-json/         # 手动fetch_all、日期窗口、POST req_body
+└─ sid-batch-parent-child/   # SID驱动采集、父子表展开与对账
+```
+
+当当前工作区没有相同接口的成功代码时，Codex 会先读取[案例索引](references/code-examples/README.md)，再只加载结构最接近的一套案例。内置代码用于参考公共工程骨架，不能把示例接口的 API 参数、返回字段、业务键或覆盖策略复制到新接口。
+
+当前工作区的最新版规范、相同接口成功代码和官方接口证据始终优先。仓库仍不包含在线公共资源 `project_config.py` 和 `lx_sync_engine.py`。
+
 ## 使用前配置
 
 ### 1. 工作区

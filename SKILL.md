@@ -28,6 +28,10 @@ Keep node code limited to resource declarations, interface constants, `biz_date`
 
 When the confirmed source schema contains any `dict` or `list` value, use the shared `sync_task` to preserve the raw nested response as JSON. Do not require an online engine capability check or a real API probe to choose this path. Apply the volume-based JSON/Parquet rule only to confirmed flat scalar schemas. Do not JSON-encode whole nested objects into Parquet `string` columns merely to produce a `.parquet` filename; make EXT/DWD parse and expand the raw nested JSON once.
 
+## Bundled Code Examples
+
+When exact-interface code is unavailable in the current workspace, or the user explicitly asks for a reference, read [references/code-examples/README.md](references/code-examples/README.md) and load only the closest matching scenario. Treat bundled examples as structural evidence, never as proof of the current interface's request fields, response schema, business keys, grain, or overwrite strategy. Current workspace standards, exact-interface successful code, and confirmed official documentation take precedence.
+
 ## One-Time Installation Check
 
 Only when the user explicitly asks for an installation check, read and follow [references/installation-check.md](references/installation-check.md). Probe the user's existing `maxcompute-mcp` and `opt-lyt-db` connections with bounded read-only operations. A successful probe means no reconfiguration is needed. Do not perform this check during normal interface onboarding, and never inspect, print, copy, or store credential values.
