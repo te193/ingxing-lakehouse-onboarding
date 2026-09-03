@@ -19,19 +19,26 @@ Default to one step per user turn. Create `{workspace}/{dataset}/` and save ever
 
 - Declare `project_config.py` and `lx_sync_engine.py` resources with `.py` suffix.
 - Treat both files as DataWorks online shared resources. Do not require local copies and do not ask the user to provide them merely because they are absent from the workspace.
-- Use the shared client for token, signing, HTTP, retry, and OSS access; do not duplicate credentials.
+- Use the shared engine for token, signing, HTTP, retry, pagination safeguards, serialization, Parquet writing, OSS staging/commit, manifests, and publication. Do not duplicate or locally reimplement any of those capabilities.
+- Keep the node to resource declarations, interface configuration, `get_biz_date()`, confirmed request parameters or interface-specific batching, and a confirmed public-engine call. Treat interface-local imports or implementations of `requests`, `oss2`, `pyarrow`, staging, multipart copy, or manifest logic as a failed review unless unique interface evidence explicitly requires them.
 - Prefer the confirmed call structure from an existing successful interface node when the user asks to follow the old or previously working code structure; do not substitute a guessed shared-engine function.
+- For `sync_parquet_task`, verify the full successful-node task contract, not only the function signature. Require `req_params_tpl`, `req_body_tpl`, and `field_types`; include `biz_date` and `sync_time` in `field_types` because the engine writes them.
+- Choose storage from the confirmed response schema without probing the online engine: any `dict`/`list` value routes directly to the public `sync_task` raw-JSON path; only an entirely flat scalar schema proceeds to the volume-based JSON/Parquet decision.
+- Declaring a nested field as `"string"` does not serialize it. Do not JSON-encode nested values into Parquet string columns and do not add interface-local PyArrow or OSS publishing code.
 - Implement the project-standard `get_biz_date()` priority and normalization.
 - Derive the confirmed request window from `biz_date`; do not offset the OSS partition date.
 - Put confirmed POST business parameters in `req_body`; verify query/signature requirements against the shared engine before using another route.
-- Configure the real list path/pagination mechanism, page size, total matching, maximum bounds, duplicate-page protection, and batching.
+- Configure the confirmed public call with the real list path/pagination mechanism, page size, total matching, maximum bounds, duplicate-page protection, and interface-specific batching; do not rebuild the engine's generic pagination loop or protections.
 - Define zero-record behavior explicitly. Full/latest overwrite must normally fail on unexpected zero; valid transactional empty days may publish an empty batch only when confirmed.
-- Publish only after every page and batch succeeds. Use staging/manifest for multi-part Parquet.
+- Select the public-engine path that publishes only after every page and batch succeeds and uses its built-in staging/manifest behavior for multi-part Parquet; do not implement this workflow in the interface node.
 - Ensure `source`, dataset, biz_date, record count, schema, and OSS `dt` agree.
 - Do not claim runtime success when no real test was authorized.
 
 ## Step 2: `ext_{dataset}_ddl.sql`
 
+- Reuse a successful comparable EXT DDL for the common structure only: settings, table naming, `dt` partition, SerDe/storage clause, dataset-root LOCATION, and business-file whitelist.
+- Map business fields from confirmed successful code for the exact API. Consult the official interface document only for fields or nesting missing from that code; never copy another API's business fields.
+- Treat this as one-time field mapping, not pipeline retesting. Do not automatically call the API, inspect OSS, query database samples, execute SQL, or add runtime tests. If exact-interface code and official documentation are missing or conflict, report the schema gap and stop.
 - Start with schema namespace, ODPS2 types, and Hive compatibility when required.
 - Name table `ext.{dataset}_raw`; partition by `dt STRING`.
 - JSON: match the actual compact envelope and exact nested `data` schema; use JsonSerDe/TEXTFILE and whitelist only business files.
@@ -79,14 +86,21 @@ Do not add DataWorks special dependency comments with a filename extension as an
 - DWD node: ODPS SQL, same biz_date, real same-cycle dependency on collection and any key-source nodes.
 - Publish order: EXT DDL, DWD DDL, collection node, DWD node, then a new smoke/backfill instance with its parameter preview checked.
 - Ordinary editor Run does not prove scheduling parameter injection. Use a smoke/backfill instance for the target business date.
+- After the user confirms a successful run or asks to detect/reconcile data, automatically execute the comparison against the existing SQL/MySQL ODS or DWD table recorded in the migration ledger. This is not satisfied by generating a reconciliation SQL file.
+- Query the new MaxCompute result through the available read-only MaxCompute MCP. Query the existing `opt_lyt` table through its read-only MCP, or through the `opt-lyt-db` skill helper only when the MCP entry is not exposed. If the user supplied an actual MaxCompute result, it may serve as new-side evidence while the existing database is queried automatically.
+- Inspect table metadata and indexes before querying large history tables. Prefer the latest indexed batch or a bounded parent-to-child join; do not start with unbounded `MAX`, `COUNT`, or `COUNT(DISTINCT)` scans over the full history.
 - Reconcile the same snapshot/window: API or published OSS count, envelope/manifest count, EXT expanded count, DWD valid count, distinct keys, time bounds, and critical business aggregates.
 - When MySQL history exists, use read-only bounded comparison with normalized NULL, decimals, timestamps, timezone, and encoding. Explain permitted row-count changes from expansion, filtering, aggregation, or deduplication.
+- A generated SQL file is only a fallback when a required read-only connection is unavailable. State the missing connection and leave the reconciliation status unverified instead of asking the user to run SQL and calling the step complete.
 
 ## Final static review
 
 - Core names match across files and nodes.
 - No secrets or embedded credentials.
 - No unconfirmed placeholders in executable artifacts.
+- No interface-local reimplementation of online shared-engine capabilities. Missing local shared-resource source is not an exception.
+- No JSON-string-in-Parquet workaround for a nested source. Confirmed nested schemas use the public raw-JSON path and downstream parsing occurs once; no online capability confirmation is required.
+- Every `sync_parquet_task` task has a confirmed `field_types` mapping, including `biz_date` and `sync_time`; no required task key is inferred from the function name alone.
 - No `SELECT *` into DWD.
 - Storage and EXT schema match.
 - Empty-source and partial-publication protection exist.

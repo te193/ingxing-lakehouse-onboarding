@@ -24,7 +24,7 @@ Read only relevant local Python/SQL samples after identifying the interface.
 4. Operations manual.
 5. Legacy Java/Python, for business recovery only.
 
-### Lingxing API contract
+### Lingxing API request contract
 
 1. Official Lingxing interface documentation.
 2. Sanitized response schema and confirmed successful request evidence.
@@ -33,6 +33,16 @@ Read only relevant local Python/SQL samples after identifying the interface.
 5. Legacy Java/Python.
 
 Official requirements and legacy behavior can differ. Record both and stop on a material conflict rather than silently choosing one.
+
+### Step 2 response-field mapping
+
+Field mapping is required because every API has a different response schema; it is not permission to retest the pipeline. Use this fixed sequence:
+
+1. Read confirmed successful code for the exact interface and reuse its response field names, types, and nesting.
+2. Consult the official interface document only for fields or nesting absent from that code.
+3. If both sources are missing or materially conflict, report the exact schema gap and stop.
+
+Do not copy business fields from a different API. During ordinary Step 2 generation, do not automatically call the real API, inspect OSS objects, query MySQL samples, execute MaxCompute SQL, or create extra runtime tests. Those are separate investigations and require an explicit user request. Reuse a successful comparable EXT DDL only for the shared table skeleton, SerDe, partition, LOCATION, and file-whitelist pattern.
 
 ### Existing DWD field contract
 
@@ -74,13 +84,19 @@ Lingxing OpenAPI
 
 - Continue to import confirmed shared capabilities from `lx_sync_engine.py`, such as `create_clients`, `sync_task`, and the proven `lx_client.fetch_all(...)` / `oss_client.upload_json(...)` call pattern.
 - Local absence of either shared resource is never, by itself, a reason to stop, search attachment caches, or ask the user to paste its source.
+- **Hard boundary:** an interface node configures and calls the online engine; it never becomes an interface-local replacement for that engine. Do not implement or copy token/credential handling, signing, HTTP retry, generic pagination protection, PyArrow/Parquet writing, OSS client creation or staging, multipart copy/commit, manifest generation, or publication logic in an interface file.
+- Interface-local code is limited to resource declarations, dataset/API constants, `get_biz_date()`, confirmed request parameters, genuinely interface-specific batching or validation, the complete task dictionary required by a proven public contract, and the public engine invocation. Importing `requests`, `oss2`, or `pyarrow` in a generated interface node is a stop signal unless confirmed evidence proves that capability is uniquely required by the interface and is absent from the online engine.
 - Do not invent an unconfirmed shared function signature. When the user asks to follow an existing successful node structure, adapt the confirmed calls shown by that node and the project documents.
+- Function name and positional arguments are not the whole shared-engine contract. Before calling `sync_parquet_task`, copy the complete `task` shape from a confirmed successful Parquet node. The current proven contract requires `req_params_tpl`, `req_body_tpl`, and `field_types`; omitting `field_types` fails before the API request with `KeyError: 'field_types'`.
+- `field_types` describes every Parquet output column and includes engine-added `biz_date` and `sync_time`. Treat the project's public Parquet path as flat-scalar-only: a declaration never converts `dict` or `list` values into strings.
+- If `sync_parquet_task` raises a missing task-key error for a confirmed flat schema, repair the interface task configuration from a successful-node contract. Do not reimplement PyArrow/OSS publication inside the interface node.
 
 ## Storage decision
 
-- Use compact one-line JSON envelope only with evidence that the interface is small.
-- Otherwise use Parquet + Snappy with an explicit PyArrow schema.
-- Unknown volume is a blocker for the storage-dependent part. Use ledger counts, bounded MySQL counts, or a confirmed comparable task to resolve it; complexity alone does not prove volume.
+- Confirmed nested schema (`dict` or `list` anywhere in a record): call the shared `sync_task` and preserve the raw response as compact JSON. This decision does not depend on volume and requires no online engine capability check.
+- Confirmed flat scalar schema: use compact one-line JSON only with evidence that the interface is small; otherwise use the online engine's Parquet + Snappy path with a confirmed `field_types` output schema.
+- Do not turn nested objects or arrays into JSON text solely to store them in Parquet `string` columns. Parse and expand the raw JSON once in EXT/DWD.
+- Unknown schema is a blocker for storage selection. Unknown volume is a blocker only after the schema is confirmed flat; use ledger counts, bounded MySQL counts, or a confirmed comparable task to resolve it.
 - JSON envelope fields are `source`, `dataset`, `biz_date`, `record_count`, `sync_time`, and `data`.
 - Parquet EXT fields must exactly match the written Parquet schema. Do not invent envelope fields absent from the file.
 
@@ -89,7 +105,7 @@ Lingxing OpenAPI
 - Confirm HTTP method, query fields, body fields, signature participation, response list path, pagination origin, page size, and termination condition per interface.
 - For confirmed POST body contracts, pass business parameters through `lx_client.fetch_all(..., req_body=...)`. Do not assume `sync_task(req_params_tpl=...)` routes or signs them equivalently.
 - The adjust-price queue proved that routing its POST parameters through the wrong common path caused Lingxing `code=2001006`; the working call used `req_body`. Apply this fact to that interface and only generalize when the common engine contract is verified.
-- Preserve total-change detection, duplicate-page protection, maximum page/offset limits, bounded retries, and all-or-nothing publication. Never upload a partial official batch.
+- Configure the confirmed public engine so its total-change detection, duplicate-page protection, maximum page/offset limits, bounded retries, and all-or-nothing publication remain active. Do not reimplement those generic safeguards in the interface node. Never publish a partial official batch.
 - Multi-stage and SID/order batching interfaces must identify the upstream key source, batch size, failure boundary, and real DataWorks dependency.
 
 ## Business date
