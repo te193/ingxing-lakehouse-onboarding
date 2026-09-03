@@ -64,7 +64,7 @@ Use the expanded intake contract only when the interface is new or absent from t
 
 ## Mandatory Automatic Reconciliation
 
-When the user reports that the collection or DWD node ran successfully, or asks to check, validate, reconcile, or compare the data, Step 5 is an execution task rather than a SQL-generation-only task.
+When the user reports that the collection or DWD node ran successfully, or asks to check, validate, reconcile, or compare the data, Step 5 is an execution task rather than a SQL-generation-only task. Read [references/reconciliation-report.md](references/reconciliation-report.md) and use its compact report shape for the final response.
 
 1. Locate the existing ODS/DWD table from the migration ledger or confirmed project evidence.
 2. Query the new MaxCompute EXT/DWD result through the available read-only MaxCompute MCP. If the user already supplied an actual run result, use it as new-side evidence but still query the existing database automatically.
@@ -74,6 +74,8 @@ When the user reports that the collection or DWD node ran successfully, or asks 
 6. Report exact equality only for the same snapshot boundary. When collection times differ, quantify the absolute and percentage differences and label the result as a same-day or approximate comparison.
 
 Do not stop after writing a reconciliation SQL file when both data sources are queryable. Do not ask the user to run the query merely because SQL generation is easier. If a required connection is unavailable, name the unavailable connection and provide the query only as a fallback; do not claim that reconciliation was completed.
+
+Return the compact report in chat by default. Expand it only for anomalies, and create a Markdown or SQL file only when the user explicitly requests one.
 
 ## Authorization Boundary
 

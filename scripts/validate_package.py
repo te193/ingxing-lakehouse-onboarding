@@ -6,6 +6,7 @@ SKILL = (ROOT / "SKILL.md").read_text(encoding="utf-8")
 README = (ROOT / "README.md").read_text(encoding="utf-8")
 INSTALL_CHECK = ROOT / "references" / "installation-check.md"
 EXAMPLES = ROOT / "references" / "code-examples"
+RECONCILIATION_REPORT = ROOT / "references" / "reconciliation-report.md"
 
 
 def require(condition: bool, message: str) -> None:
@@ -35,5 +36,13 @@ for scenario in ("simple-shared-json", "manual-post-json", "sid-batch-parent-chi
     require(any(name.startswith("ext_") and name.endswith("_ddl.sql") for name in names), f"{scenario} has no EXT DDL")
     require(any(name.startswith("dwd_") and name.endswith("_ddl.sql") for name in names), f"{scenario} has no DWD DDL")
     require(any(name.startswith("dwd_") and name.endswith("_etl.sql") for name in names), f"{scenario} has no DWD ETL")
+
+require(RECONCILIATION_REPORT.exists(), "missing compact reconciliation report template")
+require("references/reconciliation-report.md" in SKILL, "SKILL.md does not route the reconciliation template")
+report_text = RECONCILIATION_REPORT.read_text(encoding="utf-8")
+for status in ("通过", "条件通过", "不通过", "未完成"):
+    require(status in report_text, f"reconciliation status missing: {status}")
+require("异常时" in report_text, "template does not expand only on anomalies")
+require("不生成文件" in report_text, "template does not default to chat-only output")
 
 print("package behavior checks passed")
