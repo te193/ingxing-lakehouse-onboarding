@@ -36,8 +36,8 @@ Only when the user explicitly asks for an installation check, read and follow [r
 
 1. Resolve the name through the migration ledger. Detect aliases and duplicate matches.
 2. Use only the minimum evidence needed for the current step. For Step 2 response-field mapping, read confirmed successful code for the exact interface first and consult official Lingxing documentation only for fields that code does not establish. Do not automatically query database samples, inspect OSS, call the business API, or execute SQL. If the exact-interface code and official documentation are both missing or materially conflict, report the gap and stop.
-3. Label every intake fact as `已确认`, `有证据的推断`, or `缺失`.
-4. Stop before affected production code if a blocking field is missing or sources conflict. Report confirmed facts, the exact gap, the concrete risk, and one smallest decisive question.
+3. In Step 0, confirm only interface identity, available evidence, the requested/current step, and blockers for that step. Do not front-load request, schema, DWD, ETL, dependency, and reconciliation decisions that belong to later steps.
+4. Label facts required by the current step as `已确认`, `有证据的推断`, or `缺失`. Stop only the affected executable artifact when one of its blocking facts is missing or conflicting; do not block Step 1 merely because a Step 3 or Step 5 fact is not yet known.
 5. After Step 0 is complete, read [references/output-checklists.md](references/output-checklists.md) and deliver in this order:
    - Step 1: `{dataset}.py`
    - Step 2: `ext_{dataset}_ddl.sql`
@@ -46,6 +46,17 @@ Only when the user explicitly asks for an installation check, read and follow [r
    - Step 5: DataWorks configuration and automatic reconciliation against the existing SQL/MySQL tables
 6. End each delivery with the completed step, evidence/assumptions, and the next step. Continue automatically only when the user explicitly requests all steps at once.
 7. Suggest a ledger status update after acceptance; edit the ledger only when requested or clearly included in the requested build.
+
+## Progressive Step 0 Gate
+
+The normal Step 0 is deliberately small:
+
+1. Resolve the interface name to one ledger entry and confirm dataset, API path, method, and migration status.
+2. Locate exact-interface successful code or other existing artifacts.
+3. Determine whether the user is starting, reviewing, repairing, or continuing the pipeline, and identify the next requested step.
+4. Check only that step's blocking facts. Reuse confirmed ledger or successful-code facts without re-investigating or asking the user to repeat them.
+
+Use the expanded intake contract only when the interface is new or absent from the ledger, multiple entries match, current evidence conflicts, or the user asks for an end-to-end design review. Request details belong to Step 1, full response fields to Step 2, DWD grain and keys to Step 3, transformation rules to Step 4, and scheduling/reconciliation boundaries to Step 5.
 
 ## Mandatory Automatic Reconciliation
 
