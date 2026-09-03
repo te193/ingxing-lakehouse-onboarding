@@ -45,4 +45,15 @@ for status in ("通过", "条件通过", "不通过", "未完成"):
 require("异常时" in report_text, "template does not expand only on anomalies")
 require("不生成文件" in report_text, "template does not default to chat-only output")
 
+for text in (
+    "MaxCompute MCP 不直接读取 OSS 文件",
+    "~/.codex/skills/opt-lyt-db",
+    "~/.agents/skills/opt-lyt-db",
+    "OPT_LYT_DB_HOST",
+    "OPT_LYT_DB_PASSWORD",
+):
+    require(text in README, f"README is missing dependency guidance: {text}")
+require("全局 `opt-lyt-db`" in install_text, "installation check does not identify the global database skill")
+require("不得要求用户在聊天中发送真实数据库密码" in install_text, "installation check does not protect chat credentials")
+
 print("package behavior checks passed")

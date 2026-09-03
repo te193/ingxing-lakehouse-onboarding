@@ -151,9 +151,18 @@ references/code-examples/
 
 不要把真实 APP Secret、AccessKey、Token 或数据库密码写进生成代码或提交到 GitHub。
 
-## MaxCompute MCP：检查表结构和只读数据
+## 使用前需要配置的两个本地依赖
 
-如果需要让 Codex 直接核对 MaxCompute 表结构、分区、SQL 或只读数据，应配置团队使用的 `maxcompute-mcp`。
+### 1. MaxCompute MCP
+
+每位使用者需要在自己的 Codex 中配置团队使用的 `maxcompute-mcp`，并使用自己的阿里云身份。它用于：
+
+- 查询从 OSS 映射到 MaxCompute EXT 的数据；
+- 查询清洗后的 DWD 数据；
+- 检查表结构、分区、数量和质量指标；
+- 完成新 MaxCompute 数据与历史 MySQL 数据的对账。
+
+MaxCompute MCP 不直接读取 OSS 文件，它查询的是已经映射或同步到 MaxCompute 的 EXT/DWD 表。
 
 每位使用者使用自己的阿里云身份，并确保至少具备目标 Project/Schema 的元数据和只读权限。不要复制 Skill 作者的 MCP Token、Cookie 或账号配置。
 
@@ -163,9 +172,18 @@ references/code-examples/
 使用 MaxCompute MCP 只读检查当前身份、目标项目和 dwd 表结构，不执行写入。
 ```
 
-## MySQL：历史 ODS/DWD 只读核对
+### 2. 全局 `opt-lyt-db` Skill
 
-历史字段、枚举映射和数据量需要数据库证据时，可安装配套的 `opt-lyt-db` Skill，并在使用者自己的本地环境配置：
+每位使用者还需要在自己的电脑安装全局数据库 Skill：
+
+- Skill 名称：`opt-lyt-db`；
+- 显示名称：`Opt Lyt Db`；
+- Codex 安装位置：`~/.codex/skills/opt-lyt-db`；
+- 跨 Agent 安装位置：`~/.agents/skills/opt-lyt-db`。
+
+该 Skill 用于连接公司的 `opt_lyt` MySQL 数据库，查询历史 ODS、DWD、DWS、ADS 表，并与 MaxCompute 新数据进行只读对账。
+
+数据库连接信息必须由使用者在自己的本机环境变量或企业密钥管理器中配置：
 
 | 环境变量 | 用途 |
 |---|---|
@@ -175,6 +193,8 @@ references/code-examples/
 | `OPT_LYT_DB_PASSWORD` | 使用者自己的密码 |
 
 数据库账号必须限制为只读，至少禁止 `INSERT`、`UPDATE`、`DELETE`、`ALTER`、`DROP` 和存储过程调用。不要在 README、Skill、脚本或 Git 仓库中保存连接值。
+
+可以让 Codex 创建全局 Skill 的代码、配置结构和环境变量名称，再由使用者在自己的电脑上安全设置真实值。不要把真实数据库账号密码直接发送到聊天、写进 Skill 或提交到 GitHub。
 
 如果没有数据库权限，Skill 仍可使用官方接口文档和已有成功代码，但会把无法验证的历史字段标记为缺失或推断，不会假装已确认。
 

@@ -34,7 +34,7 @@ When exact-interface code is unavailable in the current workspace, or the user e
 
 ## One-Time Installation Check
 
-Only when the user explicitly asks for an installation check, read and follow [references/installation-check.md](references/installation-check.md). Probe the user's existing `maxcompute-mcp` and `opt-lyt-db` connections with bounded read-only operations. A successful probe means no reconfiguration is needed. Do not perform this check during normal interface onboarding, and never inspect, print, copy, or store credential values.
+Only when the user explicitly asks for an installation check, read and follow [references/installation-check.md](references/installation-check.md). Probe the user's existing `maxcompute-mcp` and global `opt-lyt-db` connections with bounded read-only operations. A successful probe means no reconfiguration is needed. Do not perform this check during normal interface onboarding, and never request credentials in chat or inspect, print, copy, or store credential values.
 
 ## Workflow
 
